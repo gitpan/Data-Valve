@@ -2,26 +2,26 @@
 #define __DV_BUCKET_C__
 
 #include "dv_bucket.h"
-#include <stdio.h>
 
 #define DV_1E6 1000000
+
 struct timezone tzp_not_used;
 
 static inline
-unsigned long long
-dv_bucket_timeval2long(struct timeval *tp)
+double
+dv_bucket_timeval2double(struct timeval *tp)
 {
-    return ((long long) tp->tv_sec) * DV_1E6 + tp->tv_usec;
+    return ((double) tp->tv_sec) * DV_1E6 + tp->tv_usec;
 }
 
 dv_bucket_item *
-dv_bucket_item_create(struct timeval *tp)
+dv_bucket_item_create(double time)
 {
     dv_bucket_item *item;
 
     item = (dv_bucket_item *) malloc( sizeof(dv_bucket_item) );
     item->next = NULL;
-    item->time = dv_bucket_timeval2long(tp);
+    item->time = time;
     return item;
 }
 
@@ -32,17 +32,36 @@ dv_bucket_item_destroy(dv_bucket_item *item)
 }
 
 dv_bucket*
-dv_bucket_create(float interval, unsigned long max)
+dv_bucket_create(double interval, unsigned long max)
 {
     dv_bucket *bucket;
 
     bucket = (dv_bucket *) malloc( sizeof(dv_bucket));
     bucket->max = max;
-    bucket->interval = (long) interval * DV_1E6;
+    bucket->interval = interval * DV_1E6;
     bucket->count = 0;
     bucket->head = NULL;
     bucket->tail = NULL;
     return bucket;
+}
+
+long
+dv_bucket_max_items(dv_bucket *bucket)
+{
+    return bucket->max;
+}
+
+double
+dv_bucket_interval(dv_bucket *bucket)
+{
+    double ret =  bucket->interval / DV_1E6;
+    return ret;
+}
+
+long
+dv_bucket_count(dv_bucket *bucket)
+{
+    return bucket->count;
 }
 
 void
@@ -76,25 +95,6 @@ dv_bucket_destroy(dv_bucket *bucket)
     free(bucket);
 }
 
-unsigned long
-dv_bucket_count(dv_bucket *bucket)
-{
-    return bucket->count;
-}
-
-inline static
-long long
-dv_bucket_timediff(struct timeval *tp1, struct timeval *tp2) 
-{
-    unsigned long long tp1_as_long, tp2_as_long, diff;
-
-    tp1_as_long = dv_bucket_timeval2long(tp1);
-    tp2_as_long = dv_bucket_timeval2long(tp2);
-
-    diff = tp2_as_long - tp1_as_long;
-    return diff;
-}
-
 size_t
 dv_bucket_expire( dv_bucket *bucket, struct timeval *tp )
 {
@@ -108,7 +108,7 @@ dv_bucket_expire( dv_bucket *bucket, struct timeval *tp )
 
     while ( 
         bucket->head != NULL &&
-        bucket->interval < dv_bucket_timeval2long(tp) - bucket->head->time
+        bucket->interval < dv_bucket_timeval2double(tp) - bucket->head->time
     ) {
         dv_bucket_item *tmp = bucket->head;
         bucket->head = bucket->head->next;
@@ -130,9 +130,9 @@ dv_bucket_is_full(dv_bucket *bucket)
 }
 
 void
-dv_bucket_push(dv_bucket *bucket, struct timeval *tp)
+dv_bucket_push(dv_bucket *bucket, double time)
 {
-    dv_bucket_item *item = dv_bucket_item_create(tp);
+    dv_bucket_item *item = dv_bucket_item_create(time);
     if (bucket->count == 0) {
         bucket->head = item;
         bucket->tail = item;
@@ -154,7 +154,7 @@ dv_bucket_try_push(dv_bucket *bucket)
     dv_bucket_expire( bucket, &t );
 
     if ( dv_bucket_count( bucket ) == 0 ) {
-        dv_bucket_push( bucket, &t );
+        dv_bucket_push( bucket, dv_bucket_timeval2double(&t) );
         return 1;
     }
 
@@ -162,47 +162,71 @@ dv_bucket_try_push(dv_bucket *bucket)
         return 0;
     }
 
-    dv_bucket_push( bucket, &t );
+    dv_bucket_push( bucket, dv_bucket_timeval2double(&t) );
     return 1;
 }
 
-void
-dv_bucket_dump(dv_bucket *bucket)
+SV *
+dv_bucket_serialize(dv_bucket *bucket)
 {
-    int count = 1;
+    SV *sv = newSVpv("[", 1);
     dv_bucket_item *item = bucket->head;
 
-    PerlIO_printf(PerlIO_stderr(),
-        "bucket %p, count = %d\n", bucket, bucket->count);
-
-    while (item != NULL) {
-        PerlIO_printf(PerlIO_stderr(), " + %02d. %lld.%lld (%lld)\n", count++, item->time / DV_1E6, item->time % DV_1E6, item->time);
+    while (item) {
+        sv_catpvf(sv, "%f%s", item->time, item->next ? "," : "");
         item = item->next;
     }
+
+    sv_catpv(sv, "]");
+    return sv;
+}
+
+dv_bucket *
+dv_bucket_deserialize(char *buf, size_t len, double interval, unsigned long max)
+{
+    dv_bucket *bucket = dv_bucket_create(interval, max);
+    char *end = buf + len;
+
+    if (buf != end && *buf == '[') {
+        buf++;
+        while (buf != end && !isdigit(*buf)) {
+            buf++;
+        }
+    }
+
+    while (buf != end) {
+        dv_bucket_push(bucket, strtod(buf, NULL));
+
+        /* pass through the number we just read */
+        while ( buf != end && (isdigit(*buf) || *buf == '.')) {
+            buf++;
+        }
+
+        /* find the next number */
+        while ( buf != end && ! isdigit(*buf)) {
+            buf++;
+        }
+    }
+    return bucket;
 }
 
 
-#include <stdio.h>
-int
-main(int argc, char **argv)
+dv_bucket_item *
+dv_bucket_first(dv_bucket *bucket)
 {
-    dv_bucket *bucket = dv_bucket_create( 10, 5 );
+    return bucket->head;
+}
 
-    while (1) {
-        if (dv_bucket_try_push( bucket ) ) {
-            printf("push ok\n");
-        } else {
-            printf("push NOT ok\n" );
-        }
+dv_bucket_item *
+dv_bucket_item_next(dv_bucket_item *item) 
+{
+    return item->next;
+}
 
-        dv_bucket_dump(bucket);
-
-        if (bucket->count == 5) {
-            dv_bucket_reset(bucket);
-        }
-
-        sleep(1);
-    }
+double
+dv_bucket_item_time(dv_bucket_item *item) 
+{
+    return item->time;
 }
 
 #endif /* __DV_BUCKET_C__ */

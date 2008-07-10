@@ -7,7 +7,7 @@
 MODULE = Data::Valve     PACKAGE = Data::Valve::Bucket   PREFIX = dv_bucket_
 
 dv_bucket *
-dv_bucket_create(float interval, unsigned long max)
+dv_bucket_create(double interval, unsigned long max)
 
 void
 dv_bucket_destroy(dv_bucket *bucket)
@@ -16,6 +16,49 @@ dv_bucket_destroy(dv_bucket *bucket)
 
 void
 dv_bucket_expire(dv_bucket *bucket)
+    PREINIT:
+        struct timeval t;
+        struct timezone tz;
+    CODE:
+        gettimeofday(&t, &tz);
+
+        dv_bucket_expire(bucket, &t);
 
 int
 dv_bucket_try_push(dv_bucket *bucket)
+
+dv_bucket_item *
+dv_bucket_first(dv_bucket *bucket)
+
+long
+dv_bucket_max_items(dv_bucket *bucket)
+
+double 
+dv_bucket_interval(dv_bucket *bucket)
+
+long
+dv_bucket_count(dv_bucket *bucket)
+
+SV *
+dv_bucket_serialize(dv_bucket *bucket)
+
+dv_bucket *
+dv_bucket__deserialize(SV *buf, double interval, long max)
+    PREINIT:
+        STRLEN len;
+        char *c_buf = (char *)SvPV(ST(0), len);
+    CODE:
+        RETVAL = dv_bucket_deserialize(c_buf, len, interval, max);
+    OUTPUT:
+        RETVAL
+
+void
+dv_bucket_reset(dv_bucket *bucket)
+
+MODULE = Data::Valve      PACKAGE = Data::Valve::BucketItem PREFIX = dv_bucket_item_
+
+dv_bucket_item *
+dv_bucket_item_next( dv_bucket_item *item )
+
+double
+dv_bucket_item_time( dv_bucket_item *item )

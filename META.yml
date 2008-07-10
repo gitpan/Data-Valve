@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Data-Valve
-version:             0.00001
+version:             0.00002
 abstract:            Yet Another Data Throttler
 license:             perl
 author:              
