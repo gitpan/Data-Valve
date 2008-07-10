@@ -1,6 +1,9 @@
 Changes
 =======
 
+0.00003 - 10 Jul 2008
+  - Implemented distributed locking for memcached BucketStore via KeyedMutex
+
 0.00002 - 10 Jul 2008
   - Implemented serialization/deserialization of buckets
   - Implemented memcached BucketStore (WARNING: no locking whatsoever).
