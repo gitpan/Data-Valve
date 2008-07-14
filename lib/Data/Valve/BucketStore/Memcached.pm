@@ -1,13 +1,10 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Memcached.pm 65480 2008-07-10T09:25:21.801513Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Memcached.pm 65649 2008-07-14T06:49:12.277933Z daisuke  $
 
-# TODO I think we need locking!
 package Data::Valve::BucketStore::Memcached;
 use Moose;
 use Moose::Util::TypeConstraints;
 
-use KeyedMutex;
-
-with 'Data::Valve::BucketStore';
+extends 'Data::Valve::BucketStore::Object';
 
 subtype 'Memcached'
     => as 'Object'
@@ -30,82 +27,21 @@ coerce 'Memcached'
         }
 ;
 
-class_type 'KeyedMutex';
-
-coerce 'KeyedMutex'
-    => from 'HashRef'
-        => via {
-            my $h = $_;
-            KeyedMutex->new($h->{args});
-        }
-;
-
-has 'memcached' => (
-    is       => 'rw',
+has '+store' => (
     isa      => 'Memcached',
     coerce   => 1,
     required => 1,
+    default  => sub {
+        Class::MOP::load_class('Cache::Memcached');
+        Cache::Memcached->new({
+            servers => [ '127.0.0.1:11211' ]
+        });
+    }
 );
 
-has 'mutex' => (
-    is => 'rw',
-    isa => 'KeyedMutex',
-    coerce => 1,
-);
+__PACKAGE__->meta->make_immutable;
 
 no Moose;
-
-sub BUILD {
-    my $self = shift;
-
-    # if no keyedmutex was provided explicitly, we attempt to create one
-    # however, if the creation of this object fails, well, we can go
-    # without it in degraded mode
-    if ( ! $self->mutex ) {
-        my $mutex = eval {KeyedMutex->new };
-        if ($mutex) {
-            $self->mutex($mutex);
-        } else {
-            warn $@;
-        }
-    }
-}
-
-sub try_push {
-    my ($self, %args) = @_;
-
-    my $key = $args{key};
-
-    my $mutex = $self->mutex;
-
-    my $rv;
-    my $done = 0;
-    while ( ! $done) {
-        my $lock = $mutex ? $mutex->lock($key, 1) : 1;
-        next unless $lock;
-
-        $done = 1;
-        my $bucket_source = $self->memcached->get($key);
-        my $bucket;
-        if ($bucket_source) {
-            $bucket = Data::Valve::Bucket->deserialize($bucket_source, $self->interval, $self->max_items);
-        } else {
-            $bucket = Data::Valve::Bucket->new(
-                interval  => $self->interval,
-                max_items => $self->max_items,
-            );
-        }
-        $rv = $bucket->try_push();
-
-        # we only need to set if the value has changed, i.e., the throttle
-        # was successful
-        if ($rv) {
-            $self->memcached->set($key, $bucket->serialize);
-        }
-    }
-
-    return $rv;
-}
 
 1;
 
@@ -119,6 +55,20 @@ Data::Valve::BucketStore::Memcached - Memcached Backend
 
 Data::Valve::BucketStore::Memcached uses Memcached as its storage backend,
 and allows multiple processes to work together.
+
+You need to specify a memcached server in order for t to work:
+
+  Data::Valve->new(
+    bucket_store => {
+      module => "Memcached",
+      args => {
+        store => {
+          servers => [ '127.0.0.1:11211' ],
+          namespace => ...
+        }
+      }
+    }
+  );
 
 This module also provides locking mechanism by means of KeyedMutex.
 You should specify one at construction time:

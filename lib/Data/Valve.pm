@@ -1,11 +1,11 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve.pm 65481 2008-07-10T09:26:32.262379Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve.pm 65654 2008-07-14T08:30:42.139993Z daisuke  $
 
 package Data::Valve;
 use Moose;
 use Data::Valve::Bucket;
 
 use XSLoader;
-our $VERSION   = '0.00003';
+our $VERSION   = '0.00004';
 our $AUTHORITY = 'cpan:DMAKI';
 
 XSLoader::load __PACKAGE__, $VERSION;
@@ -42,7 +42,6 @@ around 'new' => sub {
     }
 
     my $self = $next->($class, %args, bucket_store => $store);
-    $store->setup( $self );
 
     return $self;
 };
@@ -54,6 +53,7 @@ no Moose;
 sub BUILD {
     my $self = shift;
     $self->bucket_store->context($self);
+    $self->bucket_store->setup( $self );
 }
 
 sub try_push {
@@ -94,9 +94,10 @@ Data::Valve - Throttle Your Data
 
 =head1 DESCRIPTION
 
-Data::Valve is a throttler based on Data::Throttler.
+Data::Valve is a throttler based on Data::Throttler. The underlying throttling
+mechanism is much simpler than Data::Throttler, and so is faster.
 
-Currently only throttles within a single process. More to come soon
+It also comes with Memcached support for a distributed throttling.
 
 =head1 METHODS
 

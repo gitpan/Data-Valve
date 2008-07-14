@@ -42,7 +42,7 @@ BEGIN
         bucket_store => {
             module => "Memcached",
             args   => {
-                memcached => {
+                store => {
                     args => {
                         servers => [ $ENV{MEMCACHED_SERVER} ],
                         namespace => $ENV{MEMCACHED_NAMESPACE},
@@ -73,7 +73,7 @@ BEGIN
         bucket_store => {
             module => "Memcached",
             args   => {
-                memcached => {
+                store => {
                     args => {
                         servers => [ $ENV{MEMCACHED_SERVER} ],
                         namespace => $ENV{MEMCACHED_NAMESPACE},

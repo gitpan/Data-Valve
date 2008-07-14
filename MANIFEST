@@ -1,11 +1,14 @@
 Changes
 dv_bucket.c
 dv_bucket.h
+eg/benchmark.pl
 lib/Data/Valve.pm
 lib/Data/Valve/Bucket.pm
 lib/Data/Valve/BucketStore.pm
 lib/Data/Valve/BucketStore/Memcached.pm
 lib/Data/Valve/BucketStore/Memory.pm
+lib/Data/Valve/BucketStore/Object.pm
+lib/Data/Valve/BucketStore/WithKeyedMutex.pm
 Makefile.PL
 MANIFEST			This list of files
 t/00_compile.t
