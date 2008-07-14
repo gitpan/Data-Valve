@@ -1,11 +1,11 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve.pm 65654 2008-07-14T08:30:42.139993Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve.pm 65687 2008-07-14T21:45:15.647744Z daisuke  $
 
 package Data::Valve;
 use Moose;
 use Data::Valve::Bucket;
 
 use XSLoader;
-our $VERSION   = '0.00004';
+our $VERSION   = '0.00005';
 our $AUTHORITY = 'cpan:DMAKI';
 
 XSLoader::load __PACKAGE__, $VERSION;
@@ -22,15 +22,20 @@ has 'interval' => (
     required => 1
 );
 
-has 'bucket_store' => (
+has '__bucket_store' => (
+    accessor => 'bucket_store',
     is => 'rw',
     does => 'Data::Valve::BucketStore',
 );
 
-around 'new' => sub {
-    my ($next, $class, %args) = @_;
+__PACKAGE__->meta->make_immutable;
 
-    my $store = delete $args{bucket_store} || { module => 'Memory' };
+no Moose;
+
+sub BUILD {
+    my ($self, $args) = @_;
+
+    my $store = delete $args->{bucket_store} || { module => 'Memory' };
     if (! blessed $store) {
         my $module = $store->{module};
         if ($module !~ s/^\+//) {
@@ -38,22 +43,9 @@ around 'new' => sub {
         }
         Class::MOP::load_class($module);
 
-        $store = $module->new( %{ $store->{args} } );
+        $store = $module->new( %{ $store->{args} }, context => $self );
     }
-
-    my $self = $next->($class, %args, bucket_store => $store);
-
-    return $self;
-};
-
-__PACKAGE__->meta->make_immutable;
-
-no Moose;
-
-sub BUILD {
-    my $self = shift;
-    $self->bucket_store->context($self);
-    $self->bucket_store->setup( $self );
+    $self->bucket_store($store);
 }
 
 sub try_push {

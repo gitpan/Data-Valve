@@ -1,6 +1,13 @@
 Changes
 =======
 
+0.00005 - 15 Jul 2008
+  - Refactor constructor.
+
+0.00004 - 14 Jul 2008
+  - Refactor KeyedMutex to a role
+  - Refactor BucketStore::Object so it's easier to extend a BucketStore
+
 0.00003 - 10 Jul 2008
   - Implemented distributed locking for memcached BucketStore via KeyedMutex
 

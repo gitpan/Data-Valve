@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Memory.pm 65443 2008-07-10T02:19:14.430378Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Memory.pm 65685 2008-07-14T21:35:24.074501Z daisuke  $
 
 package Data::Valve::BucketStore::Memory;
 use Moose;
@@ -10,17 +10,16 @@ has 'store' => (
     isa => 'HashRef',
 );
 
-after 'setup' => sub {
-    my $self = shift;
-
-    $self->store( {
-        __default => $self->create_bucket()
-    });
-};
-
 __PACKAGE__->meta->make_immutable;
 
 no Moose;
+
+sub BUILD { 
+    my $self = shift;
+    $self->store( {
+        __default => $self->create_bucket()
+    } );
+}
 
 sub create_bucket
 {
