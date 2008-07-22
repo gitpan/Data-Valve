@@ -1,9 +1,9 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore.pm 66548 2008-07-22T00:38:42.978696Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore.pm 66567 2008-07-22T08:55:23.819173Z daisuke  $
 
 package Data::Valve::BucketStore;
 use Moose::Role;
 
-requires 'try_push';
+requires qw(try_push fill reset);
 
 has 'context' => (
     is       => 'rw',

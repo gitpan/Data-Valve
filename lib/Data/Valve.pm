@@ -1,11 +1,11 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve.pm 66550 2008-07-22T00:55:48.499349Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve.pm 66568 2008-07-22T08:57:03.423222Z daisuke  $
 
 package Data::Valve;
 use Moose;
 use Data::Valve::Bucket;
 
 use XSLoader;
-our $VERSION   = '0.00006';
+our $VERSION   = '0.00007';
 our $AUTHORITY = 'cpan:DMAKI';
 
 XSLoader::load __PACKAGE__, $VERSION;
@@ -69,9 +69,20 @@ sub BUILD {
 
 sub try_push {
     my ($self, %args) = @_;
-
     $args{key} ||= '__default';
     $self->bucket_store->try_push(%args);
+}
+
+sub reset {
+    my ($self, %args) = @_;
+    $args{key} ||= '__default';
+    $self->bucket_store->reset(%args);
+}
+
+sub fill {
+    my ($self, %args) = @_;
+    $args{key} ||= '__default';
+    $self->bucket_store->fill(%args);
 }
 
 1;
@@ -169,7 +180,15 @@ C<interval> may be a fractional number, denoting fractional seconds.
 
 Boolean. Enable/Disable strict interval mode. Default is off.
 
-=cut
+=back
+
+=head2 fill([key => $key_name])
+
+Fills up the specified bucket until it starts throttling
+
+=head2 reset([key => $key_name])
+
+Clears the specified bucket so the next request will succeed for sure
 
 =head2 try_push([key => $key_name])
 

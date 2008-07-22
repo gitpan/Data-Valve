@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Memcached.pm 65649 2008-07-14T06:49:12.277933Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Memcached.pm 66566 2008-07-22T08:32:05.088355Z daisuke  $
 
 package Data::Valve::BucketStore::Memcached;
 use Moose;
@@ -92,5 +92,7 @@ get "correct" throttling information
 =head1 METHODS
 
 =head2 try_push
+
+=head2 reset
 
 =cut

@@ -1,5 +1,5 @@
 use strict;
-use Test::More (tests => 20);
+use Test::More (tests => 32);
 
 BEGIN
 {
@@ -23,6 +23,35 @@ BEGIN
     sleep 3;
 
     ok( $valve->try_push(), "try after 3 seconds should work");
+}
+
+{
+    my $valve = Data::Valve->new(
+        max_items => 5,
+        interval  => 3
+    );
+
+    # 5 items should succeed
+    for( 1.. 5) {
+        ok( $valve->try_push(), "try $_ should succeed" );
+    }
+
+    ok( ! $valve->try_push(), "this try should fail" );
+    $valve->reset();
+
+    for( 1.. 5) {
+        ok( $valve->try_push(), "try $_ should succeed" );
+    }
+}
+
+{
+    my $valve = Data::Valve->new(
+        max_items => 5,
+        interval  => 3
+    );
+
+    $valve->fill();
+    ok( ! $valve->try_push(), "this try should fail" );
 }
 
 {

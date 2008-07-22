@@ -29,7 +29,7 @@ BEGIN
 
         $ENV{MEMCACHED_NAMESPACE} ||= join('-', rand(), {}, $$);
 
-        plan(tests => 17);
+        plan(tests => 30);
     }
 
     use_ok("Data::Valve");
@@ -82,6 +82,60 @@ BEGIN
             }
         }
     );
+    $valve->reset();
+
+    isa_ok( $valve->bucket_store, "Data::Valve::BucketStore::Memcached" );
+    # 5 items should succeed
+    for( 1.. 5) {
+        ok( $valve->try_push(), "try $_ should succeed" );
+    }
+
+    ok( ! $valve->try_push(), "this try should fail" );
+    $valve->reset();
+
+    for( 1.. 5) {
+        ok( $valve->try_push(), "try $_ should succeed" );
+    }
+}
+
+{
+    my $valve = Data::Valve->new(
+        max_items => 5,
+        interval => 3,
+        bucket_store => {
+            module => "Memcached",
+            args   => {
+                store => {
+                    args => {
+                        servers => [ $ENV{MEMCACHED_SERVER} ],
+                        namespace => $ENV{MEMCACHED_NAMESPACE},
+                    }
+                }
+            }
+        }
+    );
+    $valve->fill();
+
+    ok( ! $valve->try_push(), "this try should fail" );
+}
+
+{
+    my $valve = Data::Valve->new(
+        max_items => 5,
+        interval => 3,
+        bucket_store => {
+            module => "Memcached",
+            args   => {
+                store => {
+                    args => {
+                        servers => [ $ENV{MEMCACHED_SERVER} ],
+                        namespace => $ENV{MEMCACHED_NAMESPACE},
+                    }
+                }
+            }
+        }
+    );
+    $valve->reset();
 
     # 5 items should succeed
     for( 1.. 5) {

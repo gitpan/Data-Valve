@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Object.pm 66548 2008-07-22T00:38:42.978696Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Object.pm 66567 2008-07-22T08:55:23.819173Z daisuke  $
 
 package Data::Valve::BucketStore::Object;
 use Moose;
@@ -22,6 +22,56 @@ has 'store' => (
 __PACKAGE__->meta->make_immutable;
 
 no Moose;
+
+sub reset {
+    my ($self, %args) = @_;
+    my $key = $args{key};
+
+    my $rv;
+    my $done = 0;
+    my $store = $self->store;
+    while ( ! $done) {
+        my $lock = $self->lock($key);
+        next unless $lock;
+
+        $done = 1;
+        $rv = $store->remove($key);
+    }
+
+    return $rv;
+}
+
+sub fill {
+    my ($self, %args) = @_;
+
+    my $key = $args{key};
+
+    my $rv;
+    my $done = 0;
+    my $store = $self->store;
+    while ( ! $done) {
+        my $lock = $self->lock($key);
+        next unless $lock;
+
+        $done = 1;
+        my $bucket_source = $store->get($key);
+        my $bucket;
+        if ($bucket_source) {
+            $bucket = Data::Valve::Bucket->deserialize($bucket_source, $self->interval, $self->max_items, $self->strict_interval);
+        } else {
+            $bucket = Data::Valve::Bucket->new(
+                interval        => $self->interval,
+                max_items       => $self->max_items,
+                strict_interval => $self->strict_interval
+            );
+        }
+
+        1 while ( $bucket->try_push() );
+        $store->set($key, $bucket->serialize);
+    }
+
+    return $rv;
+}
 
 sub try_push {
     my ($self, %args) = @_;
@@ -78,6 +128,10 @@ Data::Valve::BucketStore::Object - Basic Object Storage
 This storage type only needs an object which supports a get()/set() methods
 
 =head1 METHODS
+
+=head2 fill
+
+=head2 reset
 
 =head2 try_push
 
