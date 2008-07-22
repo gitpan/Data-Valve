@@ -1,11 +1,12 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/Bucket.pm 65475 2008-07-10T08:24:28.966073Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/Bucket.pm 66548 2008-07-22T00:38:42.978696Z daisuke  $
 
 package Data::Valve::Bucket;
 use strict;
 
 sub new {
     my ($class, %args) = @_;
-    my $self  = bless create($args{interval}, $args{max_items}), $class;
+    $args{strict_interval} ||= 0;
+    my $self  = bless create($args{interval}, $args{max_items}, $args{strict_interval}), $class;
     
     return $self;
 }

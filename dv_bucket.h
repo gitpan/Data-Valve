@@ -17,6 +17,7 @@ typedef struct dv_bucket_item
 typedef struct dv_bucket {
     unsigned long max;
     double interval;
+    int strict_interval;
     unsigned long count;
     dv_bucket_item *head;
     dv_bucket_item *tail;
@@ -28,7 +29,7 @@ dv_bucket_item *
 
 /* Creates a new bucket */
 dv_bucket *
-    dv_bucket_create(double interval, unsigned long max);
+    dv_bucket_create(double interval, unsigned long max, int strict_interval);
 
 /* Frees a bucket */
 void
@@ -56,7 +57,7 @@ size_t
 
 /* Returns true if count >= max */
 int
-    dv_bucket_is_full(dv_bucket *bucket);
+    dv_bucket_is_full(dv_bucket *bucket, double dtime);
 
 /* Pushes a new item on to the bucket */
 void
@@ -72,7 +73,7 @@ SV *
 
 /* Deserialize a bucket from a string */
 dv_bucket *
-    dv_bucket_deserialize(char *buf, size_t len, double interval, unsigned long max);
+    dv_bucket_deserialize(char *buf, size_t len, double interval, unsigned long max, int strict_interval);
 
 /* returns the first bucket item */
 dv_bucket_item *

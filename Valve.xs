@@ -7,7 +7,7 @@
 MODULE = Data::Valve     PACKAGE = Data::Valve::Bucket   PREFIX = dv_bucket_
 
 dv_bucket *
-dv_bucket_create(double interval, unsigned long max)
+dv_bucket_create(double interval, unsigned long max, int strict_interval = 0)
 
 void
 dv_bucket_destroy(dv_bucket *bucket)
@@ -43,12 +43,12 @@ SV *
 dv_bucket_serialize(dv_bucket *bucket)
 
 dv_bucket *
-dv_bucket__deserialize(SV *buf, double interval, long max)
+dv_bucket__deserialize(SV *buf, double interval, long max, int strict_interval = 0)
     PREINIT:
         STRLEN len;
         char *c_buf = (char *)SvPV(ST(0), len);
     CODE:
-        RETVAL = dv_bucket_deserialize(c_buf, len, interval, max);
+        RETVAL = dv_bucket_deserialize(c_buf, len, interval, max, strict_interval);
     OUTPUT:
         RETVAL
 

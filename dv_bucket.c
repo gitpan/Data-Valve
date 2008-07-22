@@ -32,7 +32,7 @@ dv_bucket_item_destroy(dv_bucket_item *item)
 }
 
 dv_bucket*
-dv_bucket_create(double interval, unsigned long max)
+dv_bucket_create(double interval, unsigned long max, int strict_interval)
 {
     dv_bucket *bucket;
 
@@ -40,6 +40,7 @@ dv_bucket_create(double interval, unsigned long max)
     bucket->max = max;
     bucket->interval = interval * DV_1E6;
     bucket->count = 0;
+    bucket->strict_interval = strict_interval;
     bucket->head = NULL;
     bucket->tail = NULL;
     return bucket;
@@ -105,10 +106,11 @@ dv_bucket_expire( dv_bucket *bucket, struct timeval *tp )
      * we repeat until bucket->head is within the given interval
      */
     size_t expired = 0;
+    double dtime   = dv_bucket_timeval2double(tp);
 
     while ( 
         bucket->head != NULL &&
-        bucket->interval < dv_bucket_timeval2double(tp) - bucket->head->time
+        bucket->interval < dtime - bucket->head->time
     ) {
         dv_bucket_item *tmp = bucket->head;
         bucket->head = bucket->head->next;
@@ -124,8 +126,22 @@ dv_bucket_expire( dv_bucket *bucket, struct timeval *tp )
 }
 
 int
-dv_bucket_is_full(dv_bucket *bucket)
+dv_bucket_is_full(dv_bucket *bucket, double dtime)
 {
+    if (bucket->count == 0 || bucket->head == NULL) {
+        /* safety net */
+        return 0;
+    }
+
+    /* if we're in strict_interval mode, then we check for the last entry
+     * in the list, and make sure that current time is more than 
+     * last entry + interval
+     */
+    if (bucket->strict_interval) {
+        return bucket->head->time + bucket->interval > dtime;
+    }
+
+    /* Otherwise, we care about how many items are in the list */
     return bucket->max <= bucket->count;
 }
 
@@ -148,21 +164,24 @@ int
 dv_bucket_try_push(dv_bucket *bucket)
 {
     struct timeval t;
+    double dtime;
 
     gettimeofday(&t, &tzp_not_used);
 
     dv_bucket_expire( bucket, &t );
 
+    dtime = dv_bucket_timeval2double(&t);
+
     if ( dv_bucket_count( bucket ) == 0 ) {
-        dv_bucket_push( bucket, dv_bucket_timeval2double(&t) );
+        dv_bucket_push( bucket, dtime );
         return 1;
     }
 
-    if ( dv_bucket_is_full(bucket) ) {
+    if ( dv_bucket_is_full(bucket, dtime) ) {
         return 0;
     }
 
-    dv_bucket_push( bucket, dv_bucket_timeval2double(&t) );
+    dv_bucket_push( bucket, dtime );
     return 1;
 }
 
@@ -182,9 +201,9 @@ dv_bucket_serialize(dv_bucket *bucket)
 }
 
 dv_bucket *
-dv_bucket_deserialize(char *buf, size_t len, double interval, unsigned long max)
+dv_bucket_deserialize(char *buf, size_t len, double interval, unsigned long max, int strict_interval)
 {
-    dv_bucket *bucket = dv_bucket_create(interval, max);
+    dv_bucket *bucket = dv_bucket_create(interval, max, strict_interval);
     char *end = buf + len;
 
     if (buf != end && *buf == '[') {
