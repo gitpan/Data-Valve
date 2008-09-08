@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Data-Valve
-version:             0.00007
+version:             0.00008
 abstract:            Yet Another Data Throttler
 license:             perl
 author:              
@@ -10,6 +10,8 @@ distribution_type:   module
 requires:     
     KeyedMutex:                    0.06
     Moose:                         0
+    Test::More:                    0
+    Test::UseAllModules:           0
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.3.html
     version: 1.3

@@ -1,9 +1,5 @@
-use Test::More;
+use strict;
+use Test::UseAllModules;
 
-eval { require Test::Compile; Test::Compile->import };
-if ($@) {
-    plan(skip_all => "Test::Compile required for testing compilation: $@");
-} else {
-    Test::Compile::all_pm_files_ok();
-}
+BEGIN { all_uses_ok() }
 

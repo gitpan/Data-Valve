@@ -21,7 +21,9 @@ my %INFO = (
     OBJECT       => '$(O_FILES)',
     PREREQ_PM    => {
         Moose => 0,
-        KeyedMutex => '0.06'
+        KeyedMutex => '0.06',
+        'Test::More' => 0,
+        'Test::UseAllModules' => 0,
     },
     VERSION_FROM => 'lib/Data/Valve.pm',
 );
