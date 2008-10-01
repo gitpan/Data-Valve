@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Memcached.pm 66566 2008-07-22T08:32:05.088355Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Memcached.pm 86989 2008-10-01T17:20:18.893695Z daisuke  $
 
 package Data::Valve::BucketStore::Memcached;
 use Moose;
@@ -6,7 +6,7 @@ use Moose::Util::TypeConstraints;
 
 extends 'Data::Valve::BucketStore::Object';
 
-subtype 'Memcached'
+subtype 'Data::Valve::BucketStore::Object::Memcached'
     => as 'Object'
         => where {
             my $h = $_;
@@ -17,7 +17,7 @@ subtype 'Memcached'
         }
 ;
 
-coerce 'Memcached'
+coerce 'Data::Valve::BucketStore::Object::Memcached'
     => from 'HashRef'
         => via {
             my $h = $_;
@@ -28,7 +28,7 @@ coerce 'Memcached'
 ;
 
 has '+store' => (
-    isa      => 'Memcached',
+    isa      => 'Data::Valve::BucketStore::Object::Memcached',
     coerce   => 1,
     required => 1,
     default  => sub {
@@ -42,6 +42,7 @@ has '+store' => (
 __PACKAGE__->meta->make_immutable;
 
 no Moose;
+no Moose::Util::TypeConstraints;
 
 1;
 

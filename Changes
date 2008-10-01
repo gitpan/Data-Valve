@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.00009 - 01 Oct 2008
+  - Depend on MooseX::KeyedMutex.
+  - Qualify subtype names.
+
 0.00008 - 08 Sep 2008
   - Recent versions of Moose (properly) unimport blessed(), which breaks
     my code depending on it.

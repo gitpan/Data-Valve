@@ -20,8 +20,8 @@ my %INFO = (
     NAME         => "Data::Valve",
     OBJECT       => '$(O_FILES)',
     PREREQ_PM    => {
-        Moose => 0,
-        KeyedMutex => '0.06',
+        'Moose' => 0,
+        'MooseX::KeyedMutex' => '0.00003',
         'Test::More' => 0,
         'Test::UseAllModules' => 0,
     },

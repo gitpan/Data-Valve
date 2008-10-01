@@ -1,4 +1,4 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve.pm 72444 2008-09-08T14:22:07.736880Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve.pm 86992 2008-10-01T17:26:28.643093Z daisuke  $
 
 package Data::Valve;
 use Moose;
@@ -6,7 +6,7 @@ use Data::Valve::Bucket;
 use Scalar::Util ();
 
 use XSLoader;
-our $VERSION   = '0.00008';
+our $VERSION   = '0.00009';
 our $AUTHORITY = 'cpan:DMAKI';
 
 XSLoader::load __PACKAGE__, $VERSION;

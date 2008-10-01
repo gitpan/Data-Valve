@@ -1,21 +1,21 @@
-# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Object.pm 66567 2008-07-22T08:55:23.819173Z daisuke  $
+# $Id: /mirror/coderepos/lang/perl/Data-Valve/trunk/lib/Data/Valve/BucketStore/Object.pm 86989 2008-10-01T17:20:18.893695Z daisuke  $
 
 package Data::Valve::BucketStore::Object;
 use Moose;
 use Moose::Util::TypeConstraints;
 
 with 'Data::Valve::BucketStore';
-with 'Data::Valve::BucketStore::WithKeyedMutex';
+with 'MooseX::KeyedMutex';
 
 # this is the storage object. it must support get()/set()
-subtype 'StorageObject'
+subtype 'Data::Valve::BucketStore::Object::StorageObject'
     => as 'Object'
         => where { $_->can('get') && $_->can('set') }
 ;
 
 has 'store' => (
     is => 'rw',
-    isa => 'StorageObject',
+    isa => 'Data::Valve::BucketStore::Object::StorageObject',
     required => 1
 );
 
