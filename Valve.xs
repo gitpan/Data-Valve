@@ -18,9 +18,8 @@ void
 dv_bucket_expire(dv_bucket *bucket)
     PREINIT:
         struct timeval t;
-        struct timezone tz;
     CODE:
-        gettimeofday(&t, &tz);
+        gettimeofday(&t, NULL);
 
         dv_bucket_expire(bucket, &t);
 

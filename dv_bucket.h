@@ -5,7 +5,9 @@
 #include "perl.h"
 #include "XSUB.h"
 #include <stdlib.h>
-#include <sys/time.h>
+#ifndef _WIN32
+# include <sys/time.h>
+#endif
 #define MAX_DV_BUCKET_KEY 256
 
 typedef struct dv_bucket_item
@@ -30,6 +32,10 @@ dv_bucket_item *
 /* Creates a new bucket */
 dv_bucket *
     dv_bucket_create(double interval, unsigned long max, int strict_interval);
+
+/* Destroy a bucket and items */
+void
+    dv_bucket_destroy(dv_bucket *bucket);
 
 /* Frees a bucket */
 void

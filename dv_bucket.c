@@ -5,9 +5,7 @@
 
 #define DV_1E6 1000000
 
-struct timezone tzp_not_used;
-
-static inline
+static
 double
 dv_bucket_timeval2double(struct timeval *tp)
 {
@@ -166,7 +164,7 @@ dv_bucket_try_push(dv_bucket *bucket)
     struct timeval t;
     double dtime;
 
-    gettimeofday(&t, &tzp_not_used);
+    gettimeofday(&t, NULL);
 
     dv_bucket_expire( bucket, &t );
 

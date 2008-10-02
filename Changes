@@ -1,6 +1,9 @@
 Changes
 =======
 
+0.00010 - 02 Oct 2008
+  - Should now compile on Win32 platforms (mingw32 and VC8). (mattn)
+
 0.00009 - 01 Oct 2008
   - Depend on MooseX::KeyedMutex.
   - Qualify subtype names.
